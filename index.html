@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>XVx70ox - Security Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #13181b;
+      color: #aefcf7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .matrix-bg {
+      position: fixed;
+      z-index: 0;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+    }
+    .nav {
+      background: #15181aee;
+      padding: 1em 2em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px #19ffaa2a;
+      position: relative;
+      z-index: 2;
+    }
+    .logo {
+      font-size: 2em;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #21ffe7;
+      text-shadow: 0 0 8px #21ffe756;
+    }
+    .main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+    .card {
+      background: #181c1f;
+      border-radius: 18px;
+      box-shadow: 0 0 22px 2px #16ffe346, 0 0 80px 4px #21ffe710;
+      margin: 1.5em 0;
+      padding: 2em 2em 1.5em 2em;
+      max-width: 600px;
+      min-width: 320px;
+      width: 95vw;
+      text-align: right;
+      border: 1.5px solid #18f0c9a1;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      word-break: break-word;
+    }
+    .card:hover {
+      box-shadow: 0 0 38px 6px #21ffe7aa, 0 0 80px 8px #16ffe376;
+    }
+    .card h2 {
+      color: #21ffe7;
+      font-size: 1.7em;
+      margin-top: 0;
+      margin-bottom: 0.4em;
+      text-shadow: 0 0 8px #21ffe745;
+      text-align: right;
+    }
+    .card p {
+      color: #cdfcf3;
+      font-size: 1.13em;
+      margin: 0.6em 0;
+      text-align: right;
+    }
+    .card .date {
+      color: #aaa;
+      font-size: 0.93em;
+      margin-top: 1em;
+      font-style: italic;
+      letter-spacing: 1px;
+      text-align: left;
+    }
+    .explain {
+      background: #202627ee;
+      border-radius: 0 0 14px 14px;
+      margin-top: 1em;
+      padding: 1em;
+      color: #d1fff5;
+      font-size: 1.07em;
+      display: none;
+      animation: fadein 0.7s;
+      text-align: left;
+      overflow-x: auto;
+    }
+    .explain img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1em 0;
+      border-radius: 10px;
+    }
+    .explain pre, .explain code {
+      background: #22272b;
+      color: #16ffe7;
+      padding: 0.6em;
+      border-radius: 7px;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      overflow-x: auto;
+    }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(-18px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    @media (max-width: 800px) {
+      .card { max-width: 99vw; }
+    }
+    @media (max-width: 600px) {
+      .main { padding: 0 1em; }
+      .card { width: 100%; min-width: unset; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="matrix-bg"></canvas>
+  <div class="nav">
+    <div class="logo">XVx70ox</div>
+    <div>&#9776;</div>
+  </div>
+  <div class="main">
+    <!-- بطاقة WebAssembly -->
+    <div class="card" onclick="toggleExplain(this)">
+      <h2>اختراق WebAssembly  </h2>
+    <h3>اللهم لك الحمد حمداً لا ينفذ أوله ولا ينقطع آخره يا رب لك الحمد
+    </h3>
+      <p>Account Takeover And Staying Logged In Forever After Password Reset</p>
+      <div class="date">October 2025</div>
+      <div class="explain">
+        <strong>بسم الله الرحمن الرحيم , اللهم لك الحمد مالك المنه الفضل علي عباده الفقراء...</strong>
+        <br>(وَقُل رَّبِّ زِدْنِي عِلْمًا) (طه: 114)<br>
+        نَحمدك على عطاءك مرة وعلى منعك ألف مرة فأنت الخير وما مَنعت خيرًا.<br>
+        I’m Youssef Mohammed Elsyed —<br> a security researcher and bug hunter <br>
+        <img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*6F3bND-tT6I5H3juwUut4A.png">
+        <br>
+        <b>TL;DR</b><br>
+        During an authorized test I discovered the system allows account creation without email verification and issues access_token and refresh_token at signup. If the real account owner later signs in with Google or changes/resets their password, the old tokens the attacker obtained remain valid — enabling persistent access. All sensitive data in this post is redacted.<br>
+        <img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*1skD0kr7og0LBrT6KqCBOA.png">
+        <br>
+        <b>Scenario:</b><br>
+        I can register any email on the platform because the system does not require email verification during signup.<br>
+        If the legitimate account owner later signs in using Google, this does not prevent the attacker — who created the unverified account — from maintaining control over the same account.<br>
+        When the real account owner uses the Reset Password flow and changes their password, the attacker still retains the refresh_token obtained during signup. This token is not revoked or expired as a result of the password change.<br>
+        The attacker can, at any later time, use the stored token to generate new access tokens and regain full access to the account — allowing actions such as viewing PII or changing account settings.<br>
+        <b>Impact:</b><br>
+        Critical Account Takeover, High Data Exposure, High Fraud & Abuse, Medium Operational impact,<br>
+        <b>Technical reasons:</b><br>
+        1. Refresh tokens issued to unverified accounts (email_verified: false).<br>
+        2. No mechanism to revoke/invalidate tokens on password reset/change.<br>
+        3. No refresh-token rotation or reuse detection.<br>
+        4. Lack of email canonicalization/normalization.<br>
+        <b>PoC:</b><br>
+        Steps: Register with alias, obtain token, victim resets password, reuse refresh_token to gain access.<br>
+        <b>Result:</b> Access to account after password reset.
+      </div>
+    </div>
+    <!-- بطاقة XSS -->
+    <div class="card" onclick="toggleExplain(this)">
+      <h2>What is XSS?</h2>
+      <p>...بسم الله الرحمن الرحيم...<br>
+          
+(وَقُل رَّبِّ زِدْنِي عِلْمًا) <br>
+نَحمدك على عطاءك مرة وعلى منعك ألف مرة فأنت الخير وما مَنعت خيرًا
+      <p>I asked this to myself when I entered the world of bugs.<br>
+      And that’s what I’ve learned until now:</p>
+      <div class="date">October 2025</div>
+      <div class="explain">
+        <b>Definition:</b><br>
+        It is a vulnerability that allows malicious users to inject JavaScript payloads so they can manipulate the website to execute those payloads.<br><br>
+        <b>Impact:</b>
+        <ul>
+          <li>Steal User’s Cookies</li>
+          <li>Change the content of the page</li>
+          <li>Redirect the user to another malicious page</li>
+          <li>Execute commands without the user’s permission</li>
+        </ul>
+        <br>
+        Can you imagine that?<br><br>
+        <b>There are three types of XSS:</b><br>
+        <b>1. Stored XSS:</b>
+        <ul>
+          <li>
+            The attacker injects a payload in the website itself, like comments or posts, and this payload will be stored in the database. If anybody opens the infected comment or post, the payload will execute in their web browser.
+          </li>
+        </ul>
+        <b>2. Reflected XSS:</b>
+        <ul>
+          <li>
+            The attacker injects the URL or a search bar, the website takes the data from the URL and presents it without filtration.
+          </li>
+        </ul>
+        <b>3. DOM-based XSS:</b>
+        <ul>
+          <li>
+            This one happens on the client-side (inside the browser) without checking the server at all. The attacker uses it when the website’s JavaScript itself takes data from the URL or from any user-controlled input and writes it back to the page using unsafe functions like <code>document.write</code>. So the attacker doesn’t need to deal with the server to exploit this bug, he can craft a malicious URL and send it directly to the victim.
+          </li>
+        </ul>
+        <br>
+        <i>
+        It is a very simple article indeed but it’s my first one so if you think I made a mistake in explaining something, you can correct it in the comments.<br>
+        Now I’ll continue grinding.
+        </i>
+      </div>
+    </div>
+    <!-- بطاقة IDOR -->
+    <div class="card" onclick="toggleExplain(this)">
+      <h2>💡 Insecure Direct Object References (IDOR)</h2>
+      <p>...بسم الله الرحمن الرحيم...<br>
+          
+(وَقُل رَّبِّ زِدْنِي عِلْمًا) <br>
+نَحمدك على عطاءك مرة وعلى منعك ألف مرة فأنت الخير وما مَنعت خيرًا.</p>
+      <p>IDORs happen when users can access resources they do not own by directly referencing object IDs in requests.</p>
+      <div class="date">October 2025</div>
+      <div class="explain">
+        <h2>Content Table</h2>
+    <h3>IDORs - نظرة عامة</h3>
+        تحدث ثغرات <b>Insecure Direct Object References (IDORs)</b> عندما يتمكن المستخدمون من الوصول إلى موارد لا تخصهم عن طريق الإشارة مباشرةً إلى مُعرِّف الكائن (<code>object ID</code>) أو رقم الكائن أو اسم الملف.
+
+        <h3>آلية عمل الثغرة (Mechanisms)</h3>
+        على سبيل المثال:<br>
+        لنفترض أن موقع example.com يتيح لك رؤية رسائلك عبر الرابط: 
+        <pre>https://example.com/messages?user_id=1234</pre>
+        <b>ماذا يحدث إذا قمنا بتغيير <code>user_id</code> إلى رقم آخر؟</b> يمكننا رؤية رسائل مستخدم آخر دون أي إذن.
+
+        <h3>تأثير ثغرات IDOR (Impact)</h3>
+        يمكن أن يكون لثغرات IDOR تأثير كبير مثل الوصول إلى ملفات وموارد خاصة أو تعديل بيانات مستخدمين آخرين.
+
+        <h4>مثال 1: كشف البيانات</h4>
+        <pre>
+messages = load_messages(request.user_id)
+display_messages(messages)
+        </pre>
+        إذا لم يتحقق التطبيق من أن <code>request.user_id</code> هو المُستخدم الحالي، فسيقوم بعرض رسائل أي مُعرِّف يتم تمريره.
+
+        <h4>مثال 2: تغيير كلمة المرور</h4>
+        يرسل المستخدم طلب <code>POST</code> لتغيير كلمة مروره. إذا لم يتحقق التطبيق من صلاحية المُرسِل:
+        <pre>
+POST /change_password
+(POST request body)
+user_id=1234&new_password=12345
+        </pre>
+        يمكن للمُهاجم إرسال مُعرِّف مستخدم آخر وتغيير كلمة مروره.<br>
+
+        <h3>Hunting for IDORs (البحث عن الثغرات)</h3>
+        <ol>
+        <li>الخطوة 1: إنشاء حسابين. إذا كان هناك صلاحيات مختلفة، أنشئ حسابين لكل مستوى.</li>
+        <li>الخطوة 2: اكتشاف الميزات.
+         <ul>
+            <li>قراءة الرسائل: 
+              <pre>https://example.com/messages?user_id=1236</pre>
+            </li>
+            <li>قراءة الملفات: 
+              <pre>https://example.com/uploads?file=user1236-01.jpeg</pre>
+            </li>
+            <li>حذف رسالة مستخدم: 
+              <pre>
+POST /delete_message
+(POST request body)
+message_id=user1236-0111
+              </pre>
+            </li>
+          </ul>
+        </li>
+        <li>الخطوة 3 و 4: التقاط الطلبات وتغيير المعرّفات.</li>
+        </ol>
+
+        <h3>🛡️ Bypassing IDOR Protection (تجاوز الحماية)</h3>
+        <ul>
+          <li>المُعرِّفات المرمّزة والمسربة:
+            <pre>
+https://example.com/messages?user_id=MTIzNg
+(Base64url لـ 1236)
+            </pre>
+          </li>
+          <li>تقديم مُعرِّف غير مطلوب: 
+            <pre>GET /api_v1/messages?user_id=ANOTHER_USERS_ID</pre>
+          </li>
+          <li>IDORs العمياء:
+            <pre>
+POST /get_receipt
+(POST request body)
+receipt_id=2983
+            </pre>
+          </li>
+          <li>تغيير طريقة الطلب: 
+            <pre>
+DELETE example.com/uploads/user1236-01.jpeg
+GET /get_receipt?receipt_id=2983.json
+            </pre>
+          </li>
+        </ul>
+
+
+        <h3>منع ثغرات IDORs (Prevention)</h3>
+        <ol>
+          <li>التحقق من الصلاحيات (Access Control): التأكد من أن معرف الجلسة يمتلك فعلاً المورد المطلوب.</li>
+          <li>استخدام معرفات غير قابلة للتخمين:
+            <pre>
+https://example.com/messages?user_key=6MT9EalV9F7r9pns0mK1eDAEW
+            </pre>
+          </li>
+        </ol>
+      </div>
+    </div>
+    <ol>
+  <div class="card" onclick="toggleExplain(this)">
+        <h2>💡Cryptography</h2>
+      <p>...بسم الله الرحمن الرحيم...<br>
+          
+(وَقُل رَّبِّ زِدْنِي عِلْمًا) <br>
+نَحمدك على عطاءك مرة وعلى منعك ألف مرة فأنت الخير وما مَنعت خيرًا.</p>
+      <p>لو انت بتذاكر تشفير خلي بالك من شابتر 1</p>
+      <div class="date">October 2025</div>
+      <div class="explain">
+        <h2>Content Table</h2>
+    <h3>Cryptography- نظرة عامة</h3>
+     Modular Arithmetic
+ لأنها من أهم قواعد الرياضيات اللي الكريبتوجرافي كله قايم عليها.
+
+ (Modular Arithmetic)
+<li>
+  <pre>
+دي بالظبط زي فكرة الساعة
+ Clock Arithmetic
+، زي مثلاً لما بتوصل للساعة 12، الرقم اللي بعدها بيكون 1 مش 13 
+وده بيخلي في معادلات شكلها غريب شوية زي
+
+6 + 9 = 3
+و
+2 − 3 = 11
+</li>
+</pre>
+<li>
+  <pre>
+الكلام ده باين غريب، بس هو صح في حساب الساعة،
+ لأن مثلًا الساعة 11 هي قبل الساعة 2 بـ 3 ساعات.
+يعني احنا فعليًا بنحسب 2 − 3 = −1 وبعدين بنضيف 12 للنتيجة.
+وبالمثل، 9 ساعات بعد الساعة 6 يعني 6 + 9 − 12 = 3، يعني الساعة 3.
+</li>
+</pre>
+<pre>
+النظرية اللي مبنية على الفكرة 
+دي في الرياضيات اسمها نظرية التطابقات (Theory of Congruences)،
+ وهي من الأدوات القوية جدًا في علم الأعداد.
+
+خلينا نفترض إن m ≥ 1 عدد صحيح
+ساعتها بنقول إن العددين a و b 
+متطابقين مود m يعني لو الفرق بينهم a − b يقبل القسمة على m
+ونكتبها بالشكل ده:
+
+a ≡ b (mod m)
+
+يعني a و b متطابقين مود m.
+والعدد m ده بنسميه الموديلوس (modulus).
+
+مثال الساعة اللي فوق ممكن نكتبها كده باستخدام m = 12 :
+
+6 + 9 = 15 ≡ 3 (mod 12)
+2 − 3 = −1 ≡ 11 (mod 12)
+
+مثال:
+17 ≡ 7 (mod 5)
+لأن 5 بتقسِم 10 = 17 − 7
+لكن
+19 ≢ 6 (mod 11)
+لأن 11 مش بتقسِم 13 = 19 − 6.
+
+لاحظ إن الأعداد اللي بتحقق
+a ≡ 0 (mod m)
+هي الأعداد اللي قابلة للقسمة على m، يعني مضاعفات m.
+
+ السبب اللي بيخلي صيغة التطابق دي مفيدة جدًا
+هو إنها بتتصرف زي المساواة العادية 
+خلينا نفترض إن m ≥ 1 عدد صحيح:
+لو
+a₁ ≡ a₂ (mod m) و b₁ ≡ b₂ (mod m)
+يبقى:
+a₁ ± b₁ ≡ a₂ ± b₂ (mod m)
+و
+a₁ ⋅ b₁ ≡ a₂ ⋅ b₂ (mod m)
+
+ولو a عدد صحيح، يبقى:
+a ⋅ b ≡ 1 (mod m)
+لعدد صحيح b إذا وفقط إذا كان gcd(a, m) = 1
+
+كمان، لو
+a ⋅ b₁ ≡ a ⋅ b₂ ≡ 1 (mod m)
+يبقى
+b₁ ≡ b₂ (mod m)
+
+وبنسمي b المعكوس (multiplicative inverse) لـ a مود m
+
+طب يلا نفترض إن gcd(a, m) = 1.
+من نظرية إقليدس نقدر نلاقي عددين صحيحين u و v بحيث:
+a·u + m·v = 1
+
+وده معناه إن a·u − 1 = −m·v قابل للقسمة على m، فبالتالي
+a·u ≡ 1 (mod m)
+يعني نقدر نختار b = u.
+
+أما العكس، لو عندنا
+a·b ≡ 1 (mod m)
+ده معناه إن a·b − 1 = c·m لعدد صحيح c،
+وده يعني إن gcd(a, m) بتقسِم 1، فبالتالي gcd(a, m) = 1.
+
+وده يثبت إن
+ a
+ ليه معكوس مود m
+ إذا وفقط إذا كان gcd(a, m) = 1.
+كمان نقدر نثبت إن المعكوس ده وحيد مود m
+
+بتقول إن لو gcd(a, m) = 1 يبقى فيه معكوس b لـ a مود m
+وده معناه إن الكسر a⁻¹ = 1/a 
+ليه معنى في عالم الأعداد الصحيحة موديلو m، بحيث يكون
+a⁻¹ (mod m)
+هو العدد b اللي بيحقق:
+a·b ≡ 1 (mod m)
+
+خد m = 5 و a = 2:
+gcd(2, 5) = 1
+يبقى فيه معكوس لـ 2 مود 5، واللي هو 3 لأن
+2·3 ≡ 1 (mod 5)
+فبالتالي
+2⁻¹ ≡ 3 (mod 5)
+
+وبرضو gcd(4, 15) = 1، يعني 4 ليها معكوس مود 15، وبالفعل
+4·4 ≡ 1 (mod 15)
+يعني 4 هي معكوس نفسها.
+
+نقدر نتعامل مع كسر a/d مود m طالما المقام d أولي بالنسبة لـ m.
+مثلاً نحسب:
+5/7 (mod 11)
+
+نلاحظ إن:
+7·8 ≡ 1 (mod 11)
+يبقى 7⁻¹ ≡ 8 (mod 11)
+
+إذن:
+5/7 = 5·7⁻¹ ≡ 5·8 ≡ 40 ≡ 7 (mod 11)
+
+في الأمثلة
+ اللي فاتت كان سهل نلاقي 
+ المعكوسات بالتجربة، لكن لما m يكون كبير الموضوع بيبقى أصعب.
+إحنا استخدمنا خوارزمية إقليدس الموسعة
+ (Extended Euclidean Algorithm)
+ علشان نثبت وجود المعكوس
+الطريقة دي بتحتاج عدد صغير من الخطوات 
+(حوالي 2log₂(m) + 2) علشان تحسب a⁻¹ (mod m).
+
+لما نقسم a على m، بيبقى عندنا:
+a = m·q + r
+مع 0 ≤ r < m
+وده معناه إن a ≡ r (mod m)
+
+فعلشان نشتغل على الأعداد موديلو m، كفاية نستخدم الأعداد:
+0 ≤ r < m
+وده بيؤدي للتعريف الجي
+
+Z/mZ = {0, 1, 2, ..., m−1}
+وده بنسميه حلقة الأعداد الصحيحة مود
+ m (Ring of integers mod m)
+نجمع ونضرب عناصرها كأعداد عادية،
+ وبعدين نأخد باقي القسمة على m
+
+لو درست نظرية الحلقات (Ring Theory)، هتعرف إن
+ Z/mZ 
+هي الحلقة الناتجة من قسمة Z على المثالي mZ،
+وإن الأعداد 0, 1, ...,
+ m−1 هي الممثلين للفئات المتطابقة (Congruence Classes).
+
+من النتيجة اللي فوق:
+العدد a له معكوس مود m إذا وفقط إذا
+ gcd(a, m) = 1.
+
+الأعداد اللي ليها معكوسات بنسميها الوحدات 
+(Units)، ومجموعتها بنرمز لها كده:
+
+(Z/mZ)* = {a ∈ Z/mZ : gcd(a, m) = 1}
+
+ودي بنسميها مجموعة الوحدات موديلو
+ m (Group of Units modulo m)
+
+مجموعة الوحدات موديلو 24 هي:
+(Z/24Z)* = {1, 5, 7, 11, 13, 17, 19, 23}
+
+ومجموعة الوحدات مود 7 هي:
+(Z/7Z)* = {1, 2, 3, 4, 5, 6}
+لأن كل الأعداد من 1 لـ 6 أولية مع 7
+</pre>
+بس كدا اتمنى تكون استفدت ♥️✨
+
+#JOO
+  </div>
+  </ol>
+<<!هنا انشاء البطاقه!>>
+    
+  
+  <script>
+    // Matrix Background effect
+    const canvas = document.querySelector('.matrix-bg');
+    const ctx = canvas.getContext('2d');
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const cols = Math.floor(w / 18);
+    const ypos = Array(cols).fill(0);
+    function matrix() {
+      ctx.fillStyle = '#13181bcc';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#19FFAA';
+      ctx.font = '16px monospace';
+      ypos.forEach((y, ind) => {
+        const text = String.fromCharCode(Math.random() * 128);
+        ctx.fillText(text, ind * 18, y);
+        if (y > h + Math.random() * 10000) ypos[ind] = 0;
+        else ypos[ind] = y + 16;
+      });
+    }
+    setInterval(matrix, 60);
+    window.onresize = () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w;
+      canvas.height = h;
+    };
+    // Show the explanation on card click
+    function toggleExplain(el) {
+      let detail = el.querySelector('.explain');
+      detail.style.display = (detail.style.display === 'block') ? 'none' : 'block';
+    }
+  </script>
+</body>
+</html>
